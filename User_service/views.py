@@ -5,7 +5,7 @@ from .models import user_details
 from .serializer import serializer_user,user_serailizer_by_id
 import time 
 from functools import wraps
-
+from rest_framework.decorators import api_view
 
 def measure_execution_time(func):
     @wraps(func)
@@ -122,7 +122,8 @@ def get_vehicle_details_by_date(date):
     
 
 # Interservice Call for getting vehicle details from user_id
-    
+
+@api_view(['GET'])   
 @csrf_exempt
 def get_user_details_by_id_with_all_vehicles(request):
     try:
@@ -132,15 +133,16 @@ def get_user_details_by_id_with_all_vehicles(request):
             user_object = user_details.objects.filter(user_id=user_id, is_deleted=False)
             user = user_details.objects.get(user_id=user_id, is_deleted=False)
             print(user_details)
-            print(user)
+            # print(user)
 
             serializer = serializer_user(user)
             print(serializer.data)
             
-            if user_object.exists():
+            if user_object.exists:
                 print(user_id)
                 # INterservice call to get vehicle data for user_id..
-                vehicle_response = requests.get("http://localhost:6000/api/vehicle-service/details-by-id/",params={'user_id':user_id})
+                vehicle_response = requests.get("http://localhost:6000/api/vehicle-service/details-by-id",params={'user_id':user_id})
+                print(vehicle_response)
                 if vehicle_response.status_code==200:
                     vehicle_data=vehicle_response.json().get('data',())
                 else:
