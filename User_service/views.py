@@ -199,3 +199,32 @@ def get_vehicles_details_in_date_range(start_date,end_date,page_number):
 
 
     
+# Interservice call for converting UST to IST and fetching details
+    
+def get_vehicle_details_for_ust(start_date,end_date):
+    
+    try:
+
+        start_date_utc = datetime.strptime(start_date, '%d-%m-%Y %H:%M')
+        end_date_utc = datetime.strptime(end_date, '%d-%m-%Y %H:%M')
+
+        if start_date_utc.tzinfo != None and end_date_utc.tzinfo != None:
+            if start_date_utc.tzinfo.utcoffset(start_date_utc) & end_date_utc.tzinfo.utcoffset(end_date_utc):
+                params = {'start_date':start_date_utc, 'end_date':end_date_utc}
+                response = requests.get("http://localhost:6000/api/vehicle-service/get_vehicle_details_for_ust",params=params)
+
+                if response.status_code == 200:
+                    data=response.json
+                    sorted_data = sorted(data['data'], key=lambda x: x['created_at'])
+                    return sorted_data
+                else:
+                    return JsonResponse({"message":"Failed to Fetch Details"})
+            else:
+                return JsonResponse({"message":"Invalid Date Format"},status=500)
+        else:
+            return JsonResponse({'message':'Date Parameter is missing'},status=400)
+
+
+    except Exception as e:
+        print("Error",e)
+        return None

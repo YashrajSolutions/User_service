@@ -26,6 +26,4 @@ urlpatterns = [
     path('api/user-service', views.get_all_user_list, name='get_all_user_list'),   
     path('api/user-service/<str:pk>/delete-user', views.delete_user, name='delete_user'),
     path('api/user-service/get-user-details-by-id-with-all-vehicles', views.get_user_details_by_id_with_all_vehicles, name='get_user_details_by_id_with_all_vehicles'),
-    
-
 ]
