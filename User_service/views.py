@@ -129,18 +129,14 @@ def get_user_details_by_id_with_all_vehicles(request):
     try:
         user_id = request.GET.get('user_id')  
         if user_id:
-            print(user_id)
             user_object = user_details.objects.filter(user_id=user_id, is_deleted=False)
             user = user_details.objects.get(user_id=user_id, is_deleted=False)
-            print(user_details)
-            # print(user)
 
             serializer = serializer_user(user)
             print(serializer.data)
             
             if user_object.exists:
                 print(user_id)
-                # INterservice call to get vehicle data for user_id..
                 vehicle_response = requests.get("http://localhost:6000/api/vehicle-service/details-by-id",params={'user_id':user_id})
                 print(vehicle_response)
                 if vehicle_response.status_code==200:
@@ -160,3 +156,46 @@ def get_user_details_by_id_with_all_vehicles(request):
             return JsonResponse({"message": "Date parameter is missing."}, status=400)
     except Exception as error:
         return JsonResponse({"message": "Something went wrong", "error": str(error)}, status=500)
+
+
+# Interservice Call for fetching details from Range of Dates given by User
+
+from datetime import datetime
+from django.core.paginator import Paginator
+
+def get_vehicles_details_in_date_range(start_date,end_date,page_number):
+    try:
+
+        #parse
+        start_date = datetime.strptime(start_date, '%d-%m-%Y')
+        end_date = datetime.strptime(end_date, '%d-%m-%Y')
+
+        #format the dates
+        start_date_standard = start_date.strftime('%Y-%m-%d')
+        end_date_standard = end_date.strftime('%Y-%m-%d')
+
+        #params 
+        params = {'start_date': start_date_standard, 'end_date': end_date_standard}
+
+        if params.exists:
+            response = requests.get("http://localhost:6000/api/vehicle-service/get_vehicle_details_by_date_range",params=params)
+
+            if response.status_code==200:
+                data=response.json
+                sorted_data = sorted(data['data'], key=lambda x: x['created_at'])
+
+                paginator = Paginator(sorted_data, 5)  # 5 results per page
+                page_obj = paginator.get_page(page_number)
+                
+                return page_obj.object_list
+            else:
+                return JsonResponse({"message": "Failed to fetch details"}, status=500)
+        else:
+            return JsonResponse({'message':'Date Parameter is missing'},status=400)
+        
+    except Exception as error:
+        print("Error",error)
+        return None
+
+
+    
